@@ -40,6 +40,45 @@ RCT_EXPORT_METHOD(requestPermission:(RCTResponseSenderBlock) callback)
     }];
 }
 
+RCT_EXPORT_METHOD(getContactById:(NSString *)recordID callback:(RCTResponseSenderBlock) callback) {
+    CNContactStore* contactStore = [self contactsStore:callback];
+    if (!contactStore)
+        return;
+
+    [self getRecordWithID:contactStore withIdentifier:recordID callback:callback];
+}
+
+- (void) getRecordWithID:(CNContactStore *)store withIdentifier:(NSString *)recordID callback:(RCTResponseSenderBlock) callback {
+    NSError* contactError;
+
+    NSMutableArray *keysToFetch = [[NSMutableArray alloc]init];
+    [keysToFetch addObjectsFromArray:@[
+                                       CNContactEmailAddressesKey,
+                                       CNContactPhoneNumbersKey,
+                                       CNContactFamilyNameKey,
+                                       CNContactGivenNameKey,
+                                       CNContactMiddleNameKey,
+                                       CNContactPostalAddressesKey,
+                                       CNContactOrganizationNameKey,
+                                       CNContactJobTitleKey,
+                                       CNContactImageDataAvailableKey,
+                                       CNContactThumbnailImageDataKey,
+                                       CNContactImageDataKey
+                                       ]];
+
+
+    @try {
+        CNMutableContact * contact = [[store unifiedContactWithIdentifier:recordID keysToFetch:keysToFetch error:nil] mutableCopy];
+        NSDictionary *contactDict = [self contactToDictionary:contact withThumbnails:false];
+
+        callback(@[[NSNull null], contactDict]);
+    }
+    @catch (NSException *exception) {
+        callback(@[[exception description], [NSNull null]]);
+    }
+
+}
+
 RCT_EXPORT_METHOD(getContactsMatchingString:(NSString *)string callback:(RCTResponseSenderBlock) callback)
 {
     CNContactStore *contactStore = [[CNContactStore alloc] init];
@@ -451,7 +490,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
     contact.emailAddresses = emails;
 
     NSMutableArray *postalAddresses = [[NSMutableArray alloc]init];
-    
+
     for (id addressData in [contactData valueForKey:@"postalAddresses"]) {
         NSString *label = [addressData valueForKey:@"label"];
         NSString *street = [addressData valueForKey:@"street"];
@@ -459,7 +498,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
         NSString *city = [addressData valueForKey:@"city"];
         NSString *country = [addressData valueForKey:@"country"];
         NSString *state = [addressData valueForKey:@"state"];
-        
+
         if(label && street) {
             CNMutablePostalAddress *postalAddr = [[CNMutablePostalAddress alloc] init];
             postalAddr.street = street;
@@ -470,7 +509,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
             [postalAddresses addObject:[[CNLabeledValue alloc] initWithLabel:label value: postalAddr]];
         }
     }
-    
+
     contact.postalAddresses = postalAddresses;
 
     NSString *thumbnailPath = [contactData valueForKey:@"thumbnailPath"];

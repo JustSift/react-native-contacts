@@ -2,23 +2,22 @@ package com.rt2zz.reactnativecontacts;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.CommonDataKinds.Organization;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.provider.ContactsContract.RawContacts;
-
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
+
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -26,7 +25,9 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.WritableMap;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -247,13 +248,36 @@ public class ContactsManager extends ReactContextBaseJavaModule {
         Context ctx = getReactApplicationContext();
         try {
             ContentResolver cr = ctx.getContentResolver();
-            cr.applyBatch(ContactsContract.AUTHORITY, ops);
-            callback.invoke(); // success
+            ContentProviderResult[] result = cr.applyBatch(ContactsContract.AUTHORITY, ops);
+
+            if (result != null && result.length > 0) {
+                String rawId = String.valueOf(ContentUris.parseId(result[0].uri));
+
+                ContactsProvider contactsProvider = new ContactsProvider(cr);
+                WritableMap updatedContact = contactsProvider.getContactById(rawId);
+
+                callback.invoke(null, updatedContact); // success
+            }
         } catch (Exception e) {
             callback.invoke(e.toString());
         }
     }
+    /*
+    *  Get contact from phone's addressbook
+    */
+    @ReactMethod
+    public  void getContactById(String contactId, Callback callback) {
+        Context ctx = getReactApplicationContext();
+        try {
+            ContentResolver cr = ctx.getContentResolver();
+                ContactsProvider contactsProvider = new ContactsProvider(cr);
+                WritableMap contact = contactsProvider.getContactById(contactId);
 
+                callback.invoke(null, contact); // success
+        } catch (Exception e) {
+            callback.invoke(e.toString());
+        }
+    }
     /*
      * Update contact to phone's addressbook
      */
@@ -359,6 +383,24 @@ public class ContactsManager extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+        public void deleteContact(ReadableMap contact, Callback callback) {
+            String recordID = contact.hasKey("recordID") ? contact.getString("recordID") : null;
+
+            try {
+                Context ctx = getReactApplicationContext();
+                Uri uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI,recordID);
+                ContentResolver cr = ctx.getContentResolver();
+                int deleted = cr.delete(uri,null,null);
+
+                if (deleted > 0)
+                    callback.invoke(null, recordID); // Success
+                else
+                    callback.invoke(null, null); //something is wrong
+            } catch (Exception e) {
+                callback.invoke(e.toString(), null);
+            }
+    }
     /*
      * Check permission
      */
