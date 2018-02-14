@@ -474,13 +474,13 @@ public class ContactsManager extends ReactContextBaseJavaModule {
     private int mapStringToPhoneType(String label) {
         int phoneType;
         switch (label) {
-            case "home":
-                phoneType = CommonDataKinds.Phone.TYPE_HOME;
-                break;
-            case "work":
+            case "phone":
                 phoneType = CommonDataKinds.Phone.TYPE_WORK;
                 break;
-            case "mobile":
+            case "fax":
+                phoneType = CommonDataKinds.Phone.TYPE_FAX_WORK;
+                break;
+            case "cell":
                 phoneType = CommonDataKinds.Phone.TYPE_MOBILE;
                 break;
             default:
@@ -500,7 +500,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
             case "home":
                 emailType = CommonDataKinds.Email.TYPE_HOME;
                 break;
-            case "work":
+            case "email":
                 emailType = CommonDataKinds.Email.TYPE_WORK;
                 break;
             case "mobile":
