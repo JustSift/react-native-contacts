@@ -19,11 +19,9 @@ import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.CommonDataKinds.Organization;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.provider.ContactsContract.CommonDataKinds.Note;
-import android.provider.ContactsContract.CommonDataKinds.Website;
 import android.provider.ContactsContract.RawContacts;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -32,12 +30,9 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableArray;
-import com.facebook.react.bridge.Arguments;
+
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -369,7 +364,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                 .withValue(StructuredName.PREFIX, prefix)
                 .withValue(StructuredName.SUFFIX, suffix);
         ops.add(op.build());
-        
+
         op = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                 .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
                 .withValue(ContactsContract.Data.MIMETYPE, Note.CONTENT_ITEM_TYPE)
@@ -424,7 +419,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                         .build());
             }
         }
-    
+
         ReadableArray postalAddresses = contact.hasKey("postalAddresses") ? contact.getArray("postalAddresses") : null;
         if (postalAddresses != null) {
             for (int i = 0; i < postalAddresses.size(); i++) {
@@ -443,7 +438,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                 ops.add(op.build());
             }
         }
-      
+
         Context ctx = getReactApplicationContext();
         try {
             ContentResolver cr = ctx.getContentResolver();
@@ -456,8 +451,24 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                 ContactsProvider contactsProvider = new ContactsProvider(cr);
                 WritableMap newlyAddedContact = contactsProvider.getContactByRawId(rawId);
 
-                callback.invoke(null, newlyAddedContact); // success           
-            }      
+                callback.invoke(null, newlyAddedContact); // success
+            }
+        } catch (Exception e) {
+            callback.invoke(e.toString());
+        }
+    }
+    /*
+     *  Get contact from phone's addressbook
+     */
+    @ReactMethod
+    public  void getContactById(String contactId, Callback callback) {
+        Context ctx = getReactApplicationContext();
+        try {
+            ContentResolver cr = ctx.getContentResolver();
+            ContactsProvider contactsProvider = new ContactsProvider(cr);
+            WritableMap contact = contactsProvider.getContactById(contactId);
+
+            callback.invoke(null, contact); // success
         } catch (Exception e) {
             callback.invoke(e.toString());
         }
@@ -466,8 +477,8 @@ public class ContactsManager extends ReactContextBaseJavaModule {
     public byte[] toByteArray(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
-        return stream.toByteArray();       
-    }    
+        return stream.toByteArray();
+    }
 
     /*
      * Update contact to phone's addressbook
@@ -619,9 +630,9 @@ public class ContactsManager extends ReactContextBaseJavaModule {
             ops.add(op.build());
         }
 
-         if(thumbnailPath != null && !thumbnailPath.isEmpty()) {
+        if(thumbnailPath != null && !thumbnailPath.isEmpty()) {
             Bitmap photo = BitmapFactory.decodeFile(thumbnailPath);
-     
+
             if(photo != null) {
                 ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                         .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
@@ -658,8 +669,8 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                 ContactsProvider contactsProvider = new ContactsProvider(cr);
                 WritableMap updatedContact = contactsProvider.getContactById(recordID);
 
-                callback.invoke(null, updatedContact); // success           
-            }      
+                callback.invoke(null, updatedContact); // success
+            }
         } catch (Exception e) {
             callback.invoke(e.toString());
         }
@@ -672,18 +683,18 @@ public class ContactsManager extends ReactContextBaseJavaModule {
     public void deleteContact(ReadableMap contact, Callback callback) {
 
         String recordID = contact.hasKey("recordID") ? contact.getString("recordID") : null;
-      
+
         try {
-               Context ctx = getReactApplicationContext();
+            Context ctx = getReactApplicationContext();
 
-               Uri uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI,recordID);
-               ContentResolver cr = ctx.getContentResolver();
-               int deleted = cr.delete(uri,null,null);
+            Uri uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI,recordID);
+            ContentResolver cr = ctx.getContentResolver();
+            int deleted = cr.delete(uri,null,null);
 
-               if(deleted > 0)
-                 callback.invoke(null, recordID); // success
-               else
-                 callback.invoke(null, null); // something was wrong
+            if(deleted > 0)
+                callback.invoke(null, recordID); // success
+            else
+                callback.invoke(null, null); // something was wrong
 
         } catch (Exception e) {
             callback.invoke(e.toString(), null);
@@ -762,13 +773,13 @@ public class ContactsManager extends ReactContextBaseJavaModule {
     private int mapStringToPhoneType(String label) {
         int phoneType;
         switch (label) {
-            case "home":
-                phoneType = CommonDataKinds.Phone.TYPE_HOME;
-                break;
-            case "work":
+            case "phone":
                 phoneType = CommonDataKinds.Phone.TYPE_WORK;
                 break;
-            case "mobile":
+            case "fax":
+                phoneType = CommonDataKinds.Phone.TYPE_FAX_WORK;
+                break;
+            case "cell":
                 phoneType = CommonDataKinds.Phone.TYPE_MOBILE;
                 break;
             default:
@@ -788,7 +799,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
             case "home":
                 emailType = CommonDataKinds.Email.TYPE_HOME;
                 break;
-            case "work":
+            case "email":
                 emailType = CommonDataKinds.Email.TYPE_WORK;
                 break;
             case "mobile":
