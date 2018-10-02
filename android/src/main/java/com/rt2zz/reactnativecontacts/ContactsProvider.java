@@ -113,7 +113,6 @@ public class ContactsProvider {
     }
 
     public WritableMap getContactByRawId(String contactRawId) {
-
         // Get Contact Id from Raw Contact Id
         String[] projections = new String[]{ContactsContract.RawContacts.CONTACT_ID};
         String select = ContactsContract.RawContacts._ID + "= ?";
@@ -145,12 +144,13 @@ public class ContactsProvider {
         Map<String, Contact> matchingContacts;
         {
             Cursor cursor = contentResolver.query(
-                    ContactsContract.Data.CONTENT_URI,
-                    FULL_PROJECTION.toArray(new String[FULL_PROJECTION.size()]),
-                    ContactsContract.RawContacts.CONTACT_ID + " = ?",
-                    new String[]{contactId},
-                    null
+                ContactsContract.Data.CONTENT_URI,
+                FULL_PROJECTION.toArray(new String[FULL_PROJECTION.size()]),
+                ContactsContract.RawContacts.CONTACT_ID + " = ?",
+                new String[]{contactId},
+                null
             );
+
 
             try {
                 matchingContacts = loadContactsFrom(cursor);

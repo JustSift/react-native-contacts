@@ -30,8 +30,12 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableArray;
+<<<<<<< HEAD
 
 
+=======
+import com.facebook.react.bridge.Arguments;
+>>>>>>> master
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -458,8 +462,8 @@ public class ContactsManager extends ReactContextBaseJavaModule {
         }
     }
     /*
-     *  Get contact from phone's addressbook
-     */
+    *  Get contact from phone's addressbook
+    */
     @ReactMethod
     public  void getContactById(String contactId, Callback callback) {
         Context ctx = getReactApplicationContext();
@@ -474,11 +478,13 @@ public class ContactsManager extends ReactContextBaseJavaModule {
         }
     }
 
+
     public byte[] toByteArray(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
         return stream.toByteArray();
     }
+
 
     /*
      * Update contact to phone's addressbook
@@ -676,6 +682,24 @@ public class ContactsManager extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+        public void deleteContact(ReadableMap contact, Callback callback) {
+            String recordID = contact.hasKey("recordID") ? contact.getString("recordID") : null;
+
+            try {
+                Context ctx = getReactApplicationContext();
+                Uri uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI,recordID);
+                ContentResolver cr = ctx.getContentResolver();
+                int deleted = cr.delete(uri,null,null);
+
+                if (deleted > 0)
+                    callback.invoke(null, recordID); // Success
+                else
+                    callback.invoke(null, null); //something is wrong
+            } catch (Exception e) {
+                callback.invoke(e.toString(), null);
+            }
+    }
     /*
      * Update contact to phone's addressbook
      */
