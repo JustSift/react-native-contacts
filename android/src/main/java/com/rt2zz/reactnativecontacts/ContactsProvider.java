@@ -112,10 +112,10 @@ public class ContactsProvider {
         return contacts;
     }
 
-    public WritableMap getContactByRawId(String contactRawId) {
-        // Get Contact Id from Raw Contact Id
+    public WritableMap getContactsByRawId(String contactRawId) {
+        // Get Contact from raw Id
         String[] projections = new String[]{ContactsContract.RawContacts.CONTACT_ID};
-        String select = ContactsContract.RawContacts._ID + "= ?";
+        String select = ContactsContract.RawContacts._ID + "=?";
         String[] selectionArgs = new String[]{contactRawId};
         Cursor rawCursor = contentResolver.query(ContactsContract.RawContacts.CONTENT_URI, projections, select, selectionArgs, null);
         String contactId = null;
@@ -135,22 +135,18 @@ public class ContactsProvider {
 
         rawCursor.close();
 
-        //Now that we have the real contact id, fetch information
         return getContactById(contactId);
     }
 
-    public WritableMap getContactById(String contactId) {
-
+    public  WritableMap getContactById(String contactId) {
         Map<String, Contact> matchingContacts;
-        {
-            Cursor cursor = contentResolver.query(
+        { Cursor cursor = contentResolver.query(
                 ContactsContract.Data.CONTENT_URI,
                 FULL_PROJECTION.toArray(new String[FULL_PROJECTION.size()]),
                 ContactsContract.RawContacts.CONTACT_ID + " = ?",
                 new String[]{contactId},
                 null
             );
-
 
             try {
                 matchingContacts = loadContactsFrom(cursor);
@@ -161,7 +157,7 @@ public class ContactsProvider {
             }
         }
 
-        if(matchingContacts.values().size() > 0) {
+        if (matchingContacts.values().size() > 0) {
             return matchingContacts.values().iterator().next().toMap();
         }
 
