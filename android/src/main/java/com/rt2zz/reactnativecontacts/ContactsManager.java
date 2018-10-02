@@ -33,7 +33,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.Arguments;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -458,16 +457,34 @@ public class ContactsManager extends ReactContextBaseJavaModule {
 
                 callback.invoke(null, newlyAddedContact); // success           
             }      
+
         } catch (Exception e) {
             callback.invoke(e.toString());
         }
     }
+    /*
+    *  Get contact from phone's addressbook
+    */
+    @ReactMethod
+    public  void getContactById(String contactId, Callback callback) {
+        Context ctx = getReactApplicationContext();
+        try {
+            ContentResolver cr = ctx.getContentResolver();
+                ContactsProvider contactsProvider = new ContactsProvider(cr);
+                WritableMap contact = contactsProvider.getContactById(contactId);
+                callback.invoke(null, contact); // success
+        } catch (Exception e) {
+            callback.invoke(e.toString());
+        }
+    }
+
 
     public byte[] toByteArray(Bitmap bitmap) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, stream);
         return stream.toByteArray();       
     }    
+
 
     /*
      * Update contact to phone's addressbook
@@ -665,6 +682,24 @@ public class ContactsManager extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+        public void deleteContact(ReadableMap contact, Callback callback) {
+            String recordID = contact.hasKey("recordID") ? contact.getString("recordID") : null;
+
+            try {
+                Context ctx = getReactApplicationContext();
+                Uri uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI,recordID);
+                ContentResolver cr = ctx.getContentResolver();
+                int deleted = cr.delete(uri,null,null);
+
+                if (deleted > 0)
+                    callback.invoke(null, recordID); // Success
+                else
+                    callback.invoke(null, null); //something is wrong
+            } catch (Exception e) {
+                callback.invoke(e.toString(), null);
+            }
+    }
     /*
      * Update contact to phone's addressbook
      */
@@ -762,13 +797,13 @@ public class ContactsManager extends ReactContextBaseJavaModule {
     private int mapStringToPhoneType(String label) {
         int phoneType;
         switch (label) {
-            case "home":
-                phoneType = CommonDataKinds.Phone.TYPE_HOME;
-                break;
-            case "work":
+            case "phone":
                 phoneType = CommonDataKinds.Phone.TYPE_WORK;
                 break;
-            case "mobile":
+            case "fax":
+                phoneType = CommonDataKinds.Phone.TYPE_FAX_WORK;
+                break;
+            case "cell":
                 phoneType = CommonDataKinds.Phone.TYPE_MOBILE;
                 break;
             default:
@@ -788,7 +823,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
             case "home":
                 emailType = CommonDataKinds.Email.TYPE_HOME;
                 break;
-            case "work":
+            case "email":
                 emailType = CommonDataKinds.Email.TYPE_WORK;
                 break;
             case "mobile":

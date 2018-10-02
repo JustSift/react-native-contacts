@@ -39,6 +39,45 @@ RCT_EXPORT_METHOD(requestPermission:(RCTResponseSenderBlock) callback)
     }];
 }
 
+RCT_EXPORT_METHOD(getContactById:(NSString *)recordID callback:(RCTResponseSenderBlock) callback) {
+    CNContactStore* contactStore = [self contactsStore:callback];
+    if (!contactStore)
+        return;
+
+    [self getRecordWithID:contactStore withIdentifier:recordID callback:callback];
+}
+
+- (void) getRecordWithID:(CNContactStore *)store withIdentifier:(NSString *)recordID callback:(RCTResponseSenderBlock) callback {
+    NSError* contactError;
+
+    NSMutableArray *keysToFetch = [[NSMutableArray alloc]init];
+    [keysToFetch addObjectsFromArray:@[
+                                       CNContactEmailAddressesKey,
+                                       CNContactPhoneNumbersKey,
+                                       CNContactFamilyNameKey,
+                                       CNContactGivenNameKey,
+                                       CNContactMiddleNameKey,
+                                       CNContactPostalAddressesKey,
+                                       CNContactOrganizationNameKey,
+                                       CNContactJobTitleKey,
+                                       CNContactImageDataAvailableKey,
+                                       CNContactThumbnailImageDataKey,
+                                       CNContactImageDataKey
+                                       ]];
+
+
+    @try {
+        CNMutableContact * contact = [[store unifiedContactWithIdentifier:recordID keysToFetch:keysToFetch error:nil] mutableCopy];
+        NSDictionary *contactDict = [self contactToDictionary:contact withThumbnails:false];
+
+        callback(@[[NSNull null], contactDict]);
+    }
+    @catch (NSException *exception) {
+        callback(@[[exception description], [NSNull null]]);
+    }
+
+}
+
 RCT_EXPORT_METHOD(getContactsMatchingString:(NSString *)string callback:(RCTResponseSenderBlock) callback)
 {
     CNContactStore *contactStore = [[CNContactStore alloc] init];
