@@ -468,6 +468,16 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
         else if ([label isEqual: @"iPhone"]){
             phone = [[CNLabeledValue alloc] initWithLabel:CNLabelPhoneNumberiPhone value:[[CNPhoneNumber alloc] initWithStringValue:number]];
         }
+         // Adding the following label types because the a field's baseField doesn't match the defined types. This will safeguard us from exchange containers
+        else if ([label isEqual: @"cellPhone"]){
+            phone = [[CNLabeledValue alloc] initWithLabel:CNLabelPhoneNumberMobile value:[[CNPhoneNumber alloc] initWithStringValue:number]];
+        }
+        else if ([label isEqual: @"fax"]){
+            phone = [[CNLabeledValue alloc] initWithLabel:CNLabelPhoneNumberOtherFax value:[[CNPhoneNumber alloc] initWithStringValue:number]];
+        }
+        else if ([label isEqual: @"phone"]){
+            phone = [[CNLabeledValue alloc] initWithLabel:CNLabelWork value:[[CNPhoneNumber alloc] initWithStringValue:number]];
+        }
         else{
             phone = [[CNLabeledValue alloc] initWithLabel:label value:[[CNPhoneNumber alloc] initWithStringValue:number]];
         }

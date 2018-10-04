@@ -409,7 +409,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
 
         if(thumbnailPath != null && !thumbnailPath.isEmpty()) {
             Bitmap photo = BitmapFactory.decodeFile(thumbnailPath);
-
+            
             if(photo != null) {
                 ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                         .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
@@ -448,7 +448,7 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                 String rawId = String.valueOf(ContentUris.parseId(result[0].uri));
 
                 ContactsProvider contactsProvider = new ContactsProvider(cr);
-                WritableMap newlyAddedContact = contactsProvider.getContactByRawId(rawId);
+                WritableMap newlyAddedContact = contactsProvider.getContactsByRawId(rawId);
 
                 callback.invoke(null, newlyAddedContact); // success
             }
@@ -782,6 +782,9 @@ public class ContactsManager extends ReactContextBaseJavaModule {
                 phoneType = CommonDataKinds.Phone.TYPE_FAX_WORK;
                 break;
             case "cell":
+                phoneType = CommonDataKinds.Phone.TYPE_MOBILE;
+                break;
+            case "cellPhone":
                 phoneType = CommonDataKinds.Phone.TYPE_MOBILE;
                 break;
             default:
