@@ -120,7 +120,7 @@ RCT_EXPORT_METHOD(getContactsMatchingString:(NSString *)string callback:(RCTResp
     CNContactStore* contactStore = [self contactsStore:callback];
     if(!contactStore)
         return;
-    
+
     [self retrieveContactsFromAddressBook:contactStore withThumbnails:withThumbnails withCallback:callback];
 }
 
@@ -382,7 +382,7 @@ RCT_EXPORT_METHOD(addContact:(NSDictionary *)contactData callback:(RCTResponseSe
     
     CNMutableContact * contact = [[CNMutableContact alloc] init];
     
-    [self updateRecord:contact withData:contactData];
+    [self updateRecord:contact withData:contactData withContactStore:contactStore];
     
     @try {
         CNSaveRequest *request = [[CNSaveRequest alloc] init];
@@ -423,7 +423,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
     
     @try {
         CNMutableContact* record = [[contactStore unifiedContactWithIdentifier:recordID keysToFetch:keysToFetch error:&contactError] mutableCopy];
-        [self updateRecord:record withData:contactData];
+        [self updateRecord:record withData:contactData withContactStore: contactStore];
         CNSaveRequest *request = [[CNSaveRequest alloc] init];
         [request updateContact:record];
         
@@ -438,7 +438,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
     }
 }
 
--(void) updateRecord:(CNMutableContact *)contact withData:(NSDictionary *)contactData
+-(void) updateRecord:(CNMutableContact *)contact withData:(NSDictionary *)contactData withContactStore:(CNContactStore *)contactStore
 {
     NSString *givenName = [contactData valueForKey:@"givenName"];
     NSString *familyName = [contactData valueForKey:@"familyName"];
@@ -453,12 +453,14 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
     contact.jobTitle = jobTitle;
     
     NSMutableArray *phoneNumbers = [[NSMutableArray alloc]init];
+    CNContainer* container = [[contactStore containersMatchingPredicate:[CNContainer predicateForContainersWithIdentifiers: @[contactStore.defaultContainerIdentifier]] error:nil] firstObject];
     
     for (id phoneData in [contactData valueForKey:@"phoneNumbers"]) {
-        NSString *label = [phoneData valueForKey:@"label"];
-        NSString *number = [phoneData valueForKey:@"number"];
         
+        NSString *number = [phoneData valueForKey:@"number"];
+        NSString *label = [container.name isEqual:@"Exchange"] ? [phoneData valueForKey:@"baseField"] : [phoneData valueForKey:@"label"];
         CNLabeledValue *phone;
+        
         if ([label isEqual: @"main"]){
             phone = [[CNLabeledValue alloc] initWithLabel:CNLabelPhoneNumberMain value:[[CNPhoneNumber alloc] initWithStringValue:number]];
         }
@@ -468,7 +470,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
         else if ([label isEqual: @"iPhone"]){
             phone = [[CNLabeledValue alloc] initWithLabel:CNLabelPhoneNumberiPhone value:[[CNPhoneNumber alloc] initWithStringValue:number]];
         }
-         // Adding the following label types because the a field's baseField doesn't match the defined types. This will safeguard us from exchange containers
+        // Adding the following label types because the a field's baseField doesn't match the defined types. This will safeguard us from exchange containers
         else if ([label isEqual: @"cellPhone"]){
             phone = [[CNLabeledValue alloc] initWithLabel:CNLabelPhoneNumberMobile value:[[CNPhoneNumber alloc] initWithStringValue:number]];
         }
@@ -489,7 +491,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
     NSMutableArray *emails = [[NSMutableArray alloc]init];
     
     for (id emailData in [contactData valueForKey:@"emailAddresses"]) {
-        NSString *label = [emailData valueForKey:@"label"];
+        NSString *label = [container.name isEqual:@"Exchange"] ? [emailData valueForKey:@"baseField"] : [emailData valueForKey:@"label"];
         NSString *email = [emailData valueForKey:@"email"];
         
         if(label && email) {
