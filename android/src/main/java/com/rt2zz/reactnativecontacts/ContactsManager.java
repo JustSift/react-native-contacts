@@ -787,6 +787,9 @@ public class ContactsManager extends ReactContextBaseJavaModule {
             case "cellPhone":
                 phoneType = CommonDataKinds.Phone.TYPE_MOBILE;
                 break;
+            case "officePhone":
+                phoneType = CommonDataKinds.Phone.TYPE_WORK;
+                break;
             default:
                 phoneType = CommonDataKinds.Phone.TYPE_OTHER;
                 break;
