@@ -458,7 +458,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
     for (id phoneData in [contactData valueForKey:@"phoneNumbers"]) {
         
         NSString *number = [phoneData valueForKey:@"number"];
-        NSString *label = [container.name isEqual:@"Exchange"] ? [phoneData valueForKey:@"displayType"] : [phoneData valueForKey:@"label"];
+        NSString *label = container.type == CNContainerTypeExchange ? [phoneData valueForKey:@"displayType"] : [phoneData valueForKey:@"label"];
         CNLabeledValue *phone;
         
         if ([label isEqual: @"main"]){
@@ -491,7 +491,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
     NSMutableArray *emails = [[NSMutableArray alloc]init];
     
     for (id emailData in [contactData valueForKey:@"emailAddresses"]) {
-        NSString *label = [container.name isEqual:@"Exchange"] ? [emailData valueForKey:@"displayType"] : [emailData valueForKey:@"label"];
+        NSString *label = container.type == CNContainerTypeExchange ? [phoneData valueForKey:@"displayType"] : [phoneData valueForKey:@"label"];
         NSString *email = [emailData valueForKey:@"email"];
         
         if(label && email) {
