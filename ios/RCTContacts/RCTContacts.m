@@ -491,7 +491,7 @@ RCT_EXPORT_METHOD(updateContact:(NSDictionary *)contactData callback:(RCTRespons
     NSMutableArray *emails = [[NSMutableArray alloc]init];
     
     for (id emailData in [contactData valueForKey:@"emailAddresses"]) {
-        NSString *label = container.type == CNContainerTypeExchange ? [phoneData valueForKey:@"displayType"] : [phoneData valueForKey:@"label"];
+        NSString *label = container.type == CNContainerTypeExchange ? [emailData valueForKey:@"displayType"] : [emailData valueForKey:@"label"];
         NSString *email = [emailData valueForKey:@"email"];
         
         if(label && email) {
